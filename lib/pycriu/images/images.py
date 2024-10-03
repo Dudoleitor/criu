@@ -648,3 +648,25 @@ def dumps(img):
     f = io.BytesIO(b'')
     dump(img, f)
     return f.getvalue()
+
+def write_word(img, offset, word):
+    """
+    Writes a single word to the image at the specified offset.
+    img is a bytearray, representing the raw memory dump.
+    word is an integer, representing the word to write.
+    """
+    
+    if not isinstance(img, bytearray):
+        raise TypeError("img must be a bytearray")
+    if not isinstance(offset, int):
+        raise TypeError("offset must be an integer")
+    if offset < 0 or offset >= len(img)-4:
+        raise ValueError("offset must be a valid index for the image")
+    if not isinstance(word, int):
+        raise TypeError("word must be an integer")
+    if not word >= 0 and word < 0xFFFFFFFF:
+        raise ValueError("word must be a valid 32-bit integer")
+    
+    packed_word = struct.pack('<I', word)
+    img[offset:offset+4] = packed_word
+    return img

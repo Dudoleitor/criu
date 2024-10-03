@@ -17,6 +17,22 @@ def inf(opts):
             return sys.stdin
         return sys.stdin.buffer
 
+def inimg(opts):
+    if opts['img']:
+        with open(opts['img'], 'rb') as f:
+            return bytearray(f.read())
+    else:
+        if sys.stdin.isatty():
+            # If we are reading from a terminal (not a pipe) we want text input and not binary
+            return bytearray(sys.stdin.read())
+        return bytearray(sys.stdin.buffer.read())
+
+def outimg(opts, img):
+    if opts['img']:
+        with open(opts['img'], "wb") as f:
+            f.write(img)
+    else:
+        sys.stdout.write(img)
 
 def outf(opts, decode):
     # Decode means from protobuf to JSON.
@@ -76,6 +92,15 @@ def info(opts):
 def get_task_id(p, val):
     return p[val] if val in p else p['ns_' + val][0]
 
+
+def edit(opts):
+    in_img = inimg(opts)
+    offset = int(opts['offset'], 16)
+    new_word = int(opts['new_word'], 16)
+
+    out_img = pycriu.images.write_word(in_img, offset, new_word)
+
+    outimg(opts, out_img)
 
 #
 # Explorers
@@ -419,6 +444,14 @@ def main():
                              help='do not show entry payload (if exists)',
                              action='store_true')
     show_parser.set_defaults(func=decode, pretty=True, out=None)
+
+    # Edit
+    edit_parser = subparsers.add_parser(
+        'edit', help="Write a word into a specific offset of a pagedump")
+    edit_parser.add_argument("img")
+    edit_parser.add_argument("offset")
+    edit_parser.add_argument("new_word")
+    edit_parser.set_defaults(func=edit)
 
     opts = vars(parser.parse_args())
 
