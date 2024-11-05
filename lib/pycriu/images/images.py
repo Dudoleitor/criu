@@ -670,3 +670,22 @@ def write_word(img, offset, word):
     packed_word = struct.pack('<I', word)
     img[offset:offset+4] = packed_word
     return img
+
+def write_bin(img, offset, data):
+    """
+    Writes a binary blob to the image at the specified offset.
+    img is a bytearray, representing the raw memory dump.
+    data is a bytearray, representing the binary blob to write.
+    """
+    
+    if not isinstance(img, bytearray):
+        raise TypeError("img must be a bytearray")
+    if not isinstance(offset, int):
+        raise TypeError("offset must be an integer")
+    if offset < 0 or offset >= len(img)-len(data):
+        raise ValueError("offset must be a valid index for the image")
+    if not isinstance(data, bytearray):
+        raise TypeError("data must be a bytearray")
+    
+    img[offset:offset+len(data)] = data
+    return img

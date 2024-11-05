@@ -96,11 +96,26 @@ def get_task_id(p, val):
 def edit(opts):
     in_img = inimg(opts)
     offset = int(opts['offset'], 16)
-    new_word = int(opts['new_word'], 16)
 
-    out_img = pycriu.images.write_word(in_img, offset, new_word)
+    if opts['word'] and opts['bin']:
+        print("You can't specify both --word and --bin")
+        sys.exit(1)
+    if opts['word']:
+        new_word = int(opts['word'], 16)
+        out_img = pycriu.images.write_word(in_img, offset, new_word)
+        outimg(opts, out_img)
+        return
 
-    outimg(opts, out_img)
+    if opts['bin']:
+        with open(opts['bin'], 'rb') as f:
+            new_bin = bytearray(f.read())
+        out_img = pycriu.images.write_bin(in_img, offset, new_bin)
+        outimg(opts, out_img)
+        return
+
+    print("You must specify either --word or --bin")
+    sys.exit(1)
+
 
 #
 # Explorers
@@ -448,9 +463,14 @@ def main():
     # Edit
     edit_parser = subparsers.add_parser(
         'edit', help="Write a word into a specific offset of a pagedump")
-    edit_parser.add_argument("img")
-    edit_parser.add_argument("offset")
-    edit_parser.add_argument("new_word")
+    edit_parser.add_argument('img', help='raw memory dump file')
+    edit_parser.add_argument('offset', help='offset at which start writing')
+    edit_parser.add_argument('-w',
+                             '--word',
+                             help='word to write')
+    edit_parser.add_argument('-b',
+                             '--bin',
+                             help='binary file to write')
     edit_parser.set_defaults(func=edit)
 
     opts = vars(parser.parse_args())
